@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TD22 — Ultimate Judging Page (IranTVTO × WorldSkills)- Tirotir</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+  /* فونت + سازگاری چاپ */
+  html,body{
+    font-family: Vazirmatn, ui-sans-serif, system-ui;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact; /* ← اضافه شد */
+  }
+
+  /* جایگزین @apply به CSS استاندارد (سازگار با CDN) */
+  .card{
+    background:#fff;
+    border-radius:1rem;              /* rounded-2xl */
+    box-shadow:0 10px 30px rgba(2,6,23,.08); /* shadow-lg */
+    border:1px solid #e2e8f0;        /* slate-200 */
+  }
+  .pill{
+    display:inline-flex; align-items:center; gap:.5rem;
+    padding:.25rem .5rem;
+    border-radius:9999px;            /* rounded-full */
+    font-size:.75rem; font-weight:600; /* text-xs font-semibold */
+  }
+  .btn{
+    display:inline-flex; align-items:center; gap:.5rem;
+    padding:.5rem .75rem;            /* px-3 py-2 */
+    border-radius:.75rem;            /* rounded-xl */
+    font-weight:600;
+    transition: filter .15s ease, transform .05s ease;
+  }
+  .btn:active{ transform: scale(.98); } /* active:scale-[.98] */
+
+  .btn-primary{ background:#4f46e5; color:#fff; }     /* indigo-600 */
+  .btn-primary:hover{ background:#4338ca; }           /* indigo-700 */
+
+  .btn-ghost{ background:#f1f5f9; color:#334155; }    /* slate-100 / slate-700 */
+  .btn-ghost:hover{ background:#e2e8f0; }             /* slate-200 */
+
+  .btn-danger{ background:#e11d48; color:#fff; }      /* rose-600 */
+  .btn-danger:hover{ background:#be123c; }            /* rose-700 */
+
+  .kpi{ font-size:1.5rem; font-weight:800; }          /* text-2xl font-extrabold */
+
+    /* Tooltip bubble */
+    #tooltip{
+    position:fixed; z-index:9999; display:none;
+    max-width:32rem; padding:.5rem .75rem;
+    background:#111827; color:#fff;
+    border-radius:.5rem; box-shadow:0 10px 30px rgba(0,0,0,.15);
+    pointer-events:none; font-size:.85rem; line-height:1.4;
+    }
+
+
+  @media print{
+    .no-print{ display:none !important; }
+    body{ background:#fff; }
+    .card{ box-shadow:none; border:1px solid #e5e7eb; } /* slate-200-ish */
+  }
+</style>
+
+</head>
+<body class="bg-slate-50 text-slate-900">
+  <header class="sticky top-0 z-30 backdrop-blur bg-white/80 border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap gap-3 items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="pill bg-indigo-50 text-indigo-700">TD22</span>
+        <h1 class="text-lg sm:text-xl font-extrabold">صفحهٔ داوری یک‌پارچه المپیاد تیروتیر — IranTVTO × WorldSkills</h1>
+        <span class="hidden sm:inline text-xs text-slate-500">نسخه: 2025‑08‑13 • Ultimate</span>
+      </div>
+      <div class="flex items-center gap-2 no-print">
+        <button class="btn btn-ghost" id="btnPrint">چاپ/‏PDF</button>
+        <button class="btn btn-ghost" id="btnExport">Export JSON</button>
+        <button class="btn btn-ghost" id="btnCSV">Export CSV</button>
+        <label class="btn btn-ghost cursor-pointer" for="importFile">Import JSON<input id="importFile" type="file" accept="application/json" class="hidden" /></label>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto p-4 space-y-6">
+    <!-- Controls -->
+    <section class="card p-4">
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+        <label class="md:col-span-3 flex flex-col gap-1">
+          <span class="text-sm text-slate-600">جستجوی مهارت</span>
+          <input id="skillSearch" class="rounded-xl border-slate-300 focus:ring-indigo-500" placeholder="بنویسید: وب، رباتیک، جوشکاری…" />
+        </label>
+        <label class="md:col-span-3 flex flex-col gap-1">
+          <span class="text-sm text-slate-600">مهارت</span>
+          <select id="skillSelect" class="rounded-xl border-slate-300 focus:ring-indigo-500"></select>
+        </label>
+        <label class="md:col-span-2 flex flex-col gap-1">
+          <span class="text-sm text-slate-600">ماژول / روز</span>
+          <select id="moduleSelect" class="rounded-xl border-slate-300 focus:ring-indigo-500">
+            <option value="1">۱</option>
+            <option value="2">۲</option>
+            <option value="3">۳</option>
+            <option value="4">۴</option>
+            <option value="5">۵</option>
+            <option value="6">۶</option>
+          </select>
+        </label>
+        <label class="md:col-span-2 flex flex-col gap-1">
+          <span class="text-sm text-slate-600">کُد شرکت‌کننده/تیم</span>
+          <input id="competitorId" class="rounded-xl border-slate-300 focus:ring-indigo-500" placeholder="مثلاً IRN‑RBT‑12" />
+        </label>
+        <label class="md:col-span-2 flex flex-col gap-1">
+          <span class="text-sm text-slate-600">نام داور</span>
+          <input id="judgeName" class="rounded-xl border-slate-300 focus:ring-indigo-500" placeholder="نام و نام خانوادگی" />
+        </label>
+      </div>
+      <div class="mt-4 grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+        <div class="md:col-span-4">
+          <div class="grid grid-cols-2 gap-4">
+            <label class="flex flex-col gap-1">
+              <span class="text-xs text-slate-500">وزن نهایی Judgement (%)</span>
+              <input id="wJudgement" type="number" min="0" max="100" step="1" class="rounded-xl border-slate-300" />
+            </label>
+            <label class="flex flex-col gap-1">
+              <span class="text-xs text-slate-500">وزن نهایی Measurement (%)</span>
+              <input id="wMeasurement" type="number" min="0" max="100" step="1" class="rounded-xl border-slate-300" />
+            </label>
+          </div>
+          <p class="text-xs text-slate-500 mt-1">جمع این دو باید ۱۰۰ باشد. با «الگوی مهارت» به پیش‌فرض برگردید.</p>
+        </div>
+        <div class="md:col-span-5 flex gap-2 flex-wrap no-print">
+          <button id="btnSkillTemplate" class="btn btn-ghost">بازنشانی به الگوی مهارت</button>
+          <button id="btnSave" class="btn btn-primary">ذخیرهٔ محلی</button>
+          <button id="btnLoad" class="btn btn-ghost">بازیابی آخرین</button>
+          <button id="btnResetAll" class="btn btn-danger">Reset همه</button>
+        </div>
+        <div class="md:col-span-3 flex gap-3 items-center no-print">
+          <label class="flex items-center gap-2 text-sm">
+            <input id="toggleLock" type="checkbox" class="w-4 h-4"> قفل ویرایش
+          </label>
+          <label class="flex items-center gap-2 text-sm">
+            <input id="toggleAuto" type="checkbox" class="w-4 h-4"> ذخیرهٔ خودکار
+          </label>
+          <button id="btnLoadRubrics" class="btn btn-ghost">Load rubrics.json</button>
+        </div>
+      </div>
+      <div id="skillChips" class="mt-3 flex flex-wrap gap-2"></div>
+    </section>
+
+    <!-- Scoreboard -->
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div class="card p-4">
+        <h2 class="font-bold mb-3">Judgement (۰–۳)</h2>
+        <div class="overflow-x-auto">
+          <table class="min-w-full text-sm" id="tblJudgement">
+            <thead class="bg-slate-100 text-slate-700">
+              <tr>
+                <th class="p-2 text-right">ردیف</th>
+                <th class="p-2 text-right">بُعد/Aspect</th>
+                <th class="p-2 text-right">وزن %</th>
+                <th class="p-2 text-right">امتیاز (۰–۳)</th>
+                <th class="p-2 text-right">امتیاز وزنی</th>
+                <th class="p-2"></th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+            <tfoot>
+              <tr class="bg-slate-50 font-bold">
+                <td class="p-2" colspan="2">جمع</td>
+                <td class="p-2" id="sumJWeight">0</td>
+                <td class="p-2 text-slate-400">—</td>
+                <td class="p-2" id="sumJScore">0</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        <div class="mt-3 flex gap-2 no-print">
+          <button id="addJudgement" class="btn btn-ghost">+ افزودن معیار</button>
+        </div>
+      </div>
+
+      <div class="card p-4">
+        <h2 class="font-bold mb-3">Measurement (اندازه‌گیری/چک‌لیست)</h2>
+        <div class="overflow-x-auto">
+          <table class="min-w-full text-sm" id="tblMeasurement">
+            <thead class="bg-slate-100 text-slate-700">
+              <tr>
+                <th class="p-2 text-right">ردیف</th>
+                <th class="p-2 text-right">شاخص</th>
+                <th class="p-2 text-right">حداکثر امتیاز</th>
+                <th class="p-2 text-right">امتیاز کسب‌شده</th>
+                <th class="p-2 text-right">میان‌بر</th>
+                <th class="p-2"></th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+            <tfoot>
+              <tr class="bg-slate-50 font-bold">
+                <td class="p-2" colspan="2">جمع</td>
+                <td class="p-2" id="sumMWeight">0</td>
+                <td class="p-2" id="sumMScore">0</td>
+                <td class="p-2 text-slate-400">—</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        <div class="mt-3 flex gap-2 no-print">
+          <button id="addMeasurement" class="btn btn-ghost">+ افزودن شاخص</button>
+        </div>
+      </div>
+
+      <div class="card p-4 flex flex-col gap-4">
+        <h2 class="font-bold">خلاصهٔ نمره</h2>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="p-3 rounded-xl bg-indigo-50 text-indigo-900">
+            <div class="text-xs">درصد Judgement</div>
+            <div class="kpi" id="kpiJ">0%</div>
+          </div>
+          <div class="p-3 rounded-xl bg-emerald-50 text-emerald-900">
+            <div class="text-xs">درصد Measurement</div>
+            <div class="kpi" id="kpiM">0%</div>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-900 text-white col-span-2">
+            <div class="text-xs">نمرهٔ نهایی (با وزن‌ها)</div>
+            <div class="kpi" id="kpiFinal">0.00</div>
+          </div>
+        </div>
+        <div>
+          <h3 class="font-bold text-sm mb-1">یادداشت داور</h3>
+          <textarea id="judgeNotes" rows="6" class="w-full rounded-xl border-slate-300" placeholder="شواهد سطح ۳ را مستند کنید؛ شمارهٔ ماژول/تجهیز/خطاها را ذکر کنید."></textarea>
+        </div>
+        <div class="text-xs text-slate-500">
+          <p>نکته: در این صفحه جمعِ وزن‌های هر جدول به صورت مستقل ۱۰۰ است و سپس با وزن‌های نهایی (بالا) ادغام می‌شوند.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Skill Info -->
+    <section class="card p-4">
+      <h2 class="font-bold mb-2">اطلاعات ضروری برای آزمون‌دهندگان و داوران</h2>
+      <div id="skillInfo" class="prose prose-slate max-w-none prose-p:my-1"></div>
+    </section>
+
+    <footer class="py-10 text-center text-xs text-slate-500">
+تقدیمی از فنی و حرفه‌ای خوزستان - ایذه - آموزشگاه هوش مصنوعی    </footer>
+  </main>
+
+  <script>
+    // ========= Skill Templates =========
+    const SkillsBase = [
+      {
+        id: 'web',
+        title: 'فناوری‌های وب (TD17)',
+        weights: { judgement: 60, measurement: 40 },
+        chips: ['C‑2: کیبورد/ماوس/هدفون مجاز','USB شرکت‌کننده: ممنوع در ورک‌شاپ','موسیقی آفلاین مجاز'],
+        judgement: [
+          { name: 'کیفیت پیاده‌سازی و کدنویسی (ماژولار، تست‌پذیر)', weight: 25 },
+          { name: 'یکپارچگی فرانت/بک و امنیت پایه', weight: 20 },
+          { name: 'کارایی و بهینه‌سازی (LCP/CLS/شبکه)', weight: 15 },
+          { name: 'حل مسئله/دیباگ', weight: 20 },
+          { name: 'سازمان‌دهی کار و مستندسازی/README', weight: 20 }
+        ],
+        measurement: [
+          { name: 'تعداد تست/سناریوهای پاس‌شده', weight: 30 },
+          { name: 'راه‌اندازی و دپلوی طبق دستورالعمل', weight: 30 },
+          { name: 'پیکربندی سرور/ENV صحیح', weight: 20 },
+          { name: 'چک‌لیست دسترس‌پذیری/کیفیت (نمونه)', weight: 20 }
+        ],
+        infoHTML: `
+          <ul>
+            <li>USB برای شرکت‌کننده در ورک‌شاپ ممنوع؛ اگر همراه دارید در کمد قفل کنید. کیبورد/ماوس/هدفون و ماژیک‌لایت در صبح C‑2 مجازند.</li>
+            <li>سوالات فنی باید پیشاپیش در «Discussion Forum» طرح شوند؛ در Briefing فرصت پرسش نیست و تنها ۱۵ دقیقه برای مطالعهٔ سند دارید.</li>
+            <li>کفش ایمنی طبق PPE عمومی کافی است.</li>
+          </ul>`
+      },
+      {
+        id: 'robotics',
+        title: 'رباتیک — ربات‌های خودمختار متحرک (TD23)',
+        weights: { judgement: 55, measurement: 45 },
+        chips: ['Tool cases ≤ 0.36 m³ در C‑2','Court shoes الزامی روی زمین‌ها','Performance Review Module'],
+        judgement: [
+          { name: 'طراحی/یکپارچه‌سازی مکانیک-الکترونیک-نرم‌افزار', weight: 25 },
+          { name: 'خودمختاری/ناوبری و ادراک محیط', weight: 25 },
+          { name: 'اعتمادپذیری و تکرارپذیری مأموریت', weight: 20 },
+          { name: 'ایمنی، سازمان‌دهی و نگهداشت', weight: 15 },
+          { name: 'کار تیمی و ارتباطات', weight: 15 }
+        ],
+        measurement: [
+          { name: 'اهداف مأموریت تکمیل‌شده (Success Criteria)', weight: 50 },
+          { name: 'زمان انجام مأموریت', weight: 20 },
+          { name: 'جریمه‌ها/تخلفات (تماس دست، خروج مسیر...)', weight: 15 },
+          { name: 'مستندسازی و تحویل برنامه‌ها/تنظیمات', weight: 15 }
+        ],
+        infoHTML: `
+          <ul>
+            <li>اجازهٔ ورود اطلاعات کاغذی/دیجیتال فقط در روز آشنایی (C‑2) و نگهداری تا پایان؛ جمع‌آوری اطلاعات جدید یا مشاوره در طول رقابت ممنوع.</li>
+            <li>کفش غیرلکه‌گذار مخصوص زمین مسابقه همراه داشته باشید. قطعات اسپانسری در صورت خرابی جایگزین می‌شوند؛ قطعات آورده‌شده بر عهدهٔ تیم است.</li>
+          </ul>`
+      },
+      {
+        id: 'gdt',
+        title: 'طراحی گرافیک (TD40) — الگوی عمومی',
+        weights: { judgement: 60, measurement: 40 },
+        chips: ['PDF/X + ICC','Bleed/Trim/Reg/Color Bars','اینترنت/USB: ممنوع مگر اعلام'],
+        judgement: [
+          { name: 'خلاقیت/ایده و تایپوگرافی/کمپوزیشن', weight: 30 },
+          { name: 'کنترل رنگ/تصویر و پری‌پرس', weight: 25 },
+          { name: 'دقت فنی فایل و استانداردهای خروجی', weight: 25 },
+          { name: 'سازمان‌دهی و تحویل حرفه‌ای', weight: 10 },
+          { name: 'حل مسئله/بازطراحی', weight: 10 }
+        ],
+        measurement: [
+          { name: 'Preflight پاس (PDF/X & ICC)', weight: 30 },
+          { name: 'ابعاد/رزولوشن/Bleed صحیح', weight: 25 },
+          { name: 'علامت‌های چاپ/Overprint/Spot درست', weight: 25 },
+          { name: 'نام‌گذاری/آرشیو طبق دستور', weight: 20 }
+        ],
+        infoHTML: `<ul><li>TD رسمی این مهارت در بستهٔ شما نبود؛ این الگو حرفه‌ای/پیشنهادی است.</li></ul>`
+      },
+      { id:'itnet', title:'مدیریت سیستم‌های تحت شبکه (TD39)', weights:{judgement:60,measurement:40}, chips:['US Keyboard توصیه','سوالات فقط مکتوب','USB شرکت‌کننده: ممنوع'],
+        judgement:[{name:'طراحی و پیاده‌سازی سرویس‌ها',weight:30},{name:'ایمن‌سازی و پایداری',weight:20},{name:'عیب‌یابی/مستندسازی',weight:20},{name:'کارایی/دقت عملیات',weight:20},{name:'سازمان‌دهی',weight:10}],
+        measurement:[{name:'موارد پیکربندی صحیح (DNS/DHCP/RAID/Backup...)',weight:70},{name:'تست‌های عملکرد/دسترس‌پذیری',weight:30}],
+        infoHTML:`<ul><li>کار با مجازی‌سازی ممکن است توسط اسپانسر فراهم شود. USB/لپ‌تاپ شخصی در ورک‌شاپ مجاز نیست.</li></ul>` },
+      { id:'welding', title:'جوشکاری (TD10)', weights:{judgement:50,measurement:50}, chips:['ISO 5817 معیار','اندازه‌گیری تلرانس‌ها'], judgement:[{name:'ظاهر جوش و همسانی پاس‌ها',weight:30},{name:'آماده‌سازی و ایمنی',weight:10},{name:'فرآیند و تکنیک',weight:10}], measurement:[{name:'عیوب مجاز/غیرمجاز طبق استاندارد',weight:50},{name:'تلرانس ابعادی/پروفیل',weight:50}], infoHTML:`<ul><li>به حدود عیوب (Undercut/Overlap/Root Concavity/…) توجه کنید.</li></ul>`},
+      { id:'mobile', title:'توسعهٔ نرم‌افزارهای موبایل (TD08)', weights:{judgement:60,measurement:40}, chips:['Break time اضافه نمی‌شود'], judgement:[{name:'طراحی/UX و کیفیت کُد',weight:30},{name:'کارایی/پایداری',weight:20},{name:'حل مسئله/دیباگ',weight:20},{name:'مستندسازی/Release',weight:15},{name:'سازمان‌دهی',weight:15}], measurement:[{name:'موارد تست پاس',weight:60},{name:'تحویل بیلد/سورس و راهنما',weight:40}], infoHTML:`<ul><li>سوالات باید از طریق اکسپرت و فروم رسمی پیگیری شود.</li></ul>`},
+      { id:'carpaint', title:'نقاشی خودرو (TD36)', weights:{judgement:50,measurement:50}, chips:['PPE تنفسی در کابین رنگ'], judgement:[{name:'آماده‌سازی سطح/ماسکینگ',weight:25},{name:'کیفیت رنگ/پوست پرتقالی/گرده',weight:25},{name:'ایمنی و رعایت رویه‌ها',weight:20},{name:'سازمان‌دهی/نظافت',weight:15},{name:'زمان/کارایی',weight:15}], measurement:[{name:'ضخامت/تلرانس/نقایص بصری',weight:60},{name:'تست‌های کاربردی/خشکایی',weight:40}], infoHTML:`<ul><li>تنفس هوارسان در کابین الزامی؛ مستندات HSE را رعایت کنید.</li></ul>` },
+      { id:'autobody', title:'صافکاری خودرو (TD13)', weights:{judgement:55,measurement:45}, chips:['C‑4 ارائه به اکسپرت · C‑1 ارائه به شرکت‌کننده'], judgement:[{name:'روش کار و ایمنی',weight:20},{name:'کیفیت فرم‌دهی/اندازه',weight:30},{name:'سطح نهایی',weight:25},{name:'سازمان‌دهی',weight:10},{name:'زمان',weight:15}], measurement:[{name:'ابعاد و تلرانس‌ها',weight:60},{name:'انحراف/صاف‌بودن سطح',weight:40}], infoHTML:''},
+      { id:'fashion', title:'فناوری مُد (TD31)', weights:{judgement:60,measurement:40}, chips:['C‑2 ابزار دستی مجاز','PPE: کفش پنجه‌بسته'], judgement:[{name:'برش/دوخت و دقت صنعتی',weight:40},{name:'پایان‌کاری/اتوکشی',weight:20},{name:'تناسب و اندازه',weight:20},{name:'مدیریت زمان/ایمنی',weight:10},{name:'ارائه نهایی',weight:10}], measurement:[{name:'اندازه‌ها/تلرانس الگو',weight:60},{name:'کیفیت درز/نقایص',weight:40}], infoHTML:''},
+      { id:'floristry', title:'گل‌آرایی (TD28)', weights:{judgement:60,measurement:40}, chips:['مواد منحصربه‌فرد: ممنوع مگر اعلام در فروم','چیدمان غرفه طبق سایت‌لی‌آوت'], judgement:[{name:'ترکیب‌بندی/زیبایی‌شناسی',weight:35},{name:'تکنیک‌های اتصال/پایداری',weight:25},{name:'تمیزی و ارائه',weight:20},{name:'سازمان‌دهی/ایمنی',weight:10},{name:'تفسیر بریف',weight:10}], measurement:[{name:'ابعاد/پایداری سازه',weight:70},{name:'انطباق با بریف',weight:30}], infoHTML:''},
+      { id:'brick', title:'آجرچینی (TD20)', weights:{judgement:45,measurement:55}, chips:['ماژول‌ها تا C‑1 منتشر نمی‌شوند'], judgement:[{name:'کیفیت رج‌ها/بندکشی',weight:30},{name:'ایمنی/محیط کار',weight:15}], measurement:[{name:'ابعاد/شاقول/تراز',weight:70},{name:'زمان/تکمیل',weight:30}], infoHTML:''}
+    ];
+
+    // ========= State & Utils =========
+    let Skills = [...SkillsBase];
+    let autoSave = false;
+
+    const $ = (s,root=document)=>root.querySelector(s);
+    const $$ = (s,root=document)=>Array.from(root.querySelectorAll(s));
+
+    function populateSkills(){
+      const sel = $('#skillSelect'); sel.innerHTML='';
+      Skills.forEach(s=>{ const opt=document.createElement('option'); opt.value=s.id; opt.textContent=s.title; sel.appendChild(opt); });
+      sel.value = Skills[0]?.id || '';
+      renderChips(currentSkill());
+    }
+
+    function filterSkills(){
+      const q = ($('#skillSearch').value||'').toLowerCase();
+      const sel = $('#skillSelect'); sel.innerHTML='';
+      Skills.filter(s=>s.title.toLowerCase().includes(q)).forEach(s=>{ const opt=document.createElement('option'); opt.value=s.id; opt.textContent=s.title; sel.appendChild(opt); });
+      if(sel.options.length){ sel.value = sel.options[0].value; onSkillChange(); }
+    }
+
+    function renderChips(skill){
+      const box = $('#skillChips'); box.innerHTML='';
+      (skill?.chips||[]).forEach(t=>{ const span=document.createElement('span'); span.className='pill bg-slate-100 text-slate-700'; span.textContent=t; box.appendChild(span); });
+    }
+
+    function addJRow({name='', weight=0, score=0}={}){
+      const tbody = $('#tblJudgement tbody');
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="p-2 text-slate-500"></td>
+        <td class="p-2"><input class="w-full bg-transparent border rounded-lg border-slate-200 px-2 py-1" value="${name}" data-tip="${name}" title="${name}"></td>
+        <td class="p-2"><input type="number" min="0" max="100" step="1" class="w-24 bg-transparent border rounded-lg border-slate-200 px-2 py-1" value="${weight}"></td>
+        <td class="p-2"><input type="number" min="0" max="3" step="0.5" class="w-20 bg-transparent border rounded-lg border-slate-200 px-2 py-1" value="${score}"></td>
+        <td class="p-2 text-right font-semibold">0</td>
+        <td class="p-2"><button class="btn btn-ghost text-rose-600 del">حذف</button></td>`;
+      tbody.appendChild(tr);
+      renumberRows($('#tblJudgement'));
+      attachRowHandlers(tr, 'J');
+      compute();
+    }
+
+    function addMRow({name='', weight=0, score=0}={}){
+      const tbody = $('#tblMeasurement tbody');
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="p-2 text-slate-500"></td>
+        <td class="p-2"><input class="w-full bg-transparent border rounded-lg border-slate-200 px-2 py-1" value="${name}" data-tip="${name}" title="${name}"></td>
+        <td class="p-2"><input type="number" min="0" step="1" class="w-24 bg-transparent border rounded-lg border-slate-200 px-2 py-1 max" value="${weight}"></td>
+        <td class="p-2"><input type="number" min="0" step="1" class="w-24 bg-transparent border rounded-lg border-slate-200 px-2 py-1 got" value="${score}"></td>
+        <td class="p-2 flex gap-2"><button class="btn btn-ghost fill0">۰</button><button class="btn btn-ghost fillMax">Full</button></td>
+        <td class="p-2"><button class="btn btn-ghost text-rose-600 del">حذف</button></td>`;
+      tbody.appendChild(tr);
+      renumberRows($('#tblMeasurement'));
+      attachRowHandlers(tr, 'M');
+      compute();
+    }
+
+    function renumberRows(tbl){ $$('#'+tbl.id+' tbody tr').forEach((tr,i)=>{ tr.firstElementChild.textContent=i+1; }); }
+
+    function attachRowHandlers(tr, kind){
+      tr.addEventListener('input', compute);
+      tr.querySelector('.del').addEventListener('click', ()=>{ tr.remove(); renumberRows(kind==='J'?$('#tblJudgement'):$('#tblMeasurement')); compute(); });
+      if(kind==='M'){
+        tr.querySelector('.fill0').addEventListener('click', ()=>{ tr.querySelector('.got').value=0; compute(); });
+        tr.querySelector('.fillMax').addEventListener('click', ()=>{ tr.querySelector('.got').value=tr.querySelector('.max').value||0; compute(); });
+      }
+    }
+
+    function loadTemplate(skill){
+      $('#wJudgement').value = skill.weights.judgement;
+      $('#wMeasurement').value = skill.weights.measurement;
+      $('#tblJudgement tbody').innerHTML = '';
+      $('#tblMeasurement tbody').innerHTML = '';
+      (skill.judgement||[]).forEach(r=>addJRow({name:r.name, weight:r.weight, score:0}));
+      (skill.measurement||[]).forEach(r=>addMRow({name:r.name, weight:r.weight, score:0}));
+      $('#skillInfo').innerHTML = skill.infoHTML || '';
+      renderChips(skill);
+      compute();
+    }
+
+    function compute(){
+      // Lock status
+      const locked = $('#toggleLock').checked; $$('input,select,textarea', $('#tblJudgement')).forEach(el=>el.disabled=locked); $$('input,select,textarea', $('#tblMeasurement')).forEach(el=>el.disabled=locked);
+      $('#wJudgement').disabled = locked; $('#wMeasurement').disabled = locked; $('#competitorId').disabled = locked; $('#judgeName').disabled = locked;
+
+      // Judgement
+      let jw=0, js=0; $$('#tblJudgement tbody tr').forEach(tr=>{ const w = +tr.children[2].querySelector('input').value||0; const s = +tr.children[3].querySelector('input').value||0; const pct=(s/3)*w; tr.children[4].textContent=pct.toFixed(2); jw+=w; js+=pct; });
+      $('#sumJWeight').textContent=jw.toFixed(0); $('#sumJScore').textContent=js.toFixed(2); const jPct = jw>0 ? (js/jw)*100 : 0; $('#kpiJ').textContent=jPct.toFixed(0)+'%';
+
+      // Measurement (numeric)
+      let mw=0, ms=0; $$('#tblMeasurement tbody tr').forEach(tr=>{ const max=+tr.querySelector('.max').value||0; const got=Math.min(+tr.querySelector('.got').value||0, max); mw+=max; ms+=got; });
+      $('#sumMWeight').textContent=mw.toFixed(0); $('#sumMScore').textContent=ms.toFixed(0); const mPct = mw>0 ? (ms/mw)*100 : 0; $('#kpiM').textContent=mPct.toFixed(0)+'%';
+
+      // Final
+      const wJ = +($('#wJudgement').value||0); const wM = +($('#wMeasurement').value||0); const wSum = (wJ+wM)||1; const nJ = wSum? (wJ/wSum):0.5; const nM = wSum? (wM/wSum):0.5; const final=(jPct*nJ + mPct*nM).toFixed(2); $('#kpiFinal').textContent=final;
+
+      if(autoSave){ saveLocal(true); }
+    }
+
+    function saveLocal(silent=false){ const key = storageKey(); const data = collectData(); localStorage.setItem(key, JSON.stringify(data)); if(!silent) alert('ذخیره شد: '+key); }
+    function loadLocal(){ const key = storageKey(); const txt = localStorage.getItem(key); if(!txt){ alert('موردی یافت نشد.'); return; } applyData(JSON.parse(txt)); alert('بازیابی شد: '+key); }
+    function storageKey(){ const skill=$('#skillSelect').value; const mod=$('#moduleSelect').value; const cid=($('#competitorId').value||'NA').trim(); return `TD22|${skill}|M${mod}|${cid}`; }
+
+    function collectData(){ const J=$$('#tblJudgement tbody tr').map(tr=>({ name: tr.children[1].querySelector('input').value, weight:+tr.children[2].querySelector('input').value||0, score:+tr.children[3].querySelector('input').value||0 })); const M=$$('#tblMeasurement tbody tr').map(tr=>({ name: tr.children[1].querySelector('input').value, weight:+tr.querySelector('.max').value||0, score:+tr.querySelector('.got').value||0 })); return { meta:{skill:$('#skillSelect').value,module:$('#moduleSelect').value,competitor:$('#competitorId').value,judge:$('#judgeName').value}, weights:{judgement:+$('#wJudgement').value||0,measurement:+$('#wMeasurement').value||0}, J,M, notes:$('#judgeNotes').value }; }
+
+    function applyData(d){ $('#wJudgement').value=d.weights.judgement; $('#wMeasurement').value=d.weights.measurement; $('#competitorId').value=d.meta.competitor||''; $('#judgeName').value=d.meta.judge||''; $('#tblJudgement tbody').innerHTML=''; $('#tblMeasurement tbody').innerHTML=''; (d.J||[]).forEach(r=>addJRow(r)); (d.M||[]).forEach(r=>addMRow(r)); $('#judgeNotes').value=d.notes||''; compute(); }
+
+    function exportJSON(){ const blob=new Blob([JSON.stringify(collectData(),null,2)],{type:'application/json'}); const a=document.createElement('a'); const skill=$('#skillSelect').value; const mod=$('#moduleSelect').value; const cid=$('#competitorId').value||'NA'; a.download=`${skill}_M${mod}_${cid}.json`; a.href=URL.createObjectURL(blob); a.click(); URL.revokeObjectURL(a.href); }
+
+    function exportCSV(){
+      const d=collectData();
+      const escape = s => '"'+String(s).replace(/"/g,'""')+'"';
+      const lines=['type,index,name,max_or_weight,score'];
+      d.J.forEach((r,i)=>lines.push(['Judgement',i+1,escape(r.name),r.weight,r.score].join(',')));
+      d.M.forEach((r,i)=>lines.push(['Measurement',i+1,escape(r.name),r.weight,r.score].join(',')));
+      const csv = lines.join('\r\n');
+      const bom = '\uFEFF'; // UTF‑8 BOM for Excel
+      const blob = new Blob([bom+csv], {type:'text/csv;charset=utf-8;'});
+      const a=document.createElement('a'); a.download='judging.csv'; a.href=URL.createObjectURL(blob); a.click(); URL.revokeObjectURL(a.href);
+    }
+    function importJSON(file){ const reader=new FileReader(); reader.onload=()=>{ try{ applyData(JSON.parse(reader.result)); } catch(e){ alert('خطا در فایل JSON'); } }; reader.readAsText(file); }
+
+    function resetAll(){ if(!confirm('همه چیز ریست شود؟ (جداول پاک می‌شوند)')) return; const skill = currentSkill(); $('#competitorId').value=''; $('#judgeName').value=''; $('#judgeNotes').value=''; loadTemplate(skill); }
+
+    function currentSkill(){ const id=$('#skillSelect').value; return Skills.find(s=>s.id===id); }
+
+    function onSkillChange(){ loadTemplate(currentSkill()); }
+
+    async function tryLoadRubrics(){ try{ const res = await fetch('rubrics.json',{cache:'no-store'}); if(!res.ok) return false; const data = await res.json(); mergeRubrics(data); return true; } catch{ return false; } }
+
+    function mergeRubrics(ext){ if(!Array.isArray(ext)) return; const idx = Object.fromEntries(Skills.map((s,i)=>[s.id,i])); ext.forEach(s=>{ if(idx[s.id]!==undefined){ Skills[idx[s.id]] = {...Skills[idx[s.id]], ...s}; } else { Skills.push(s); } }); populateSkills(); onSkillChange(); }
+
+    // ========= Tooltip =========
+    function setupTooltips(){
+    const tip = document.createElement('div');
+    tip.id = 'tooltip';
+    document.body.appendChild(tip);
+
+    const hide = ()=>{ tip.style.display='none'; };
+    const position = (x,y)=>{
+        const pad=12;
+        requestAnimationFrame(()=>{
+        const w=tip.offsetWidth, h=tip.offsetHeight;
+        let left=x+pad, top=y+pad;
+        if(left+w>innerWidth)  left=x-w-pad;
+        if(top +h>innerHeight) top = y-h-pad;
+        tip.style.left=left+'px';
+        tip.style.top =top +'px';
+        });
+    };
+
+    document.addEventListener('mouseover', e=>{
+        const el = e.target.closest('[data-tip]');
+        if(!el) return;
+        const txt = el.getAttribute('data-tip') || el.getAttribute('title') || '';
+        if(!txt) return;
+        tip.textContent = txt;
+        tip.style.display = 'block';
+        position(e.clientX, e.clientY);
+    });
+    document.addEventListener('mousemove', e=>{
+        if(tip.style.display==='block') position(e.clientX, e.clientY);
+    });
+    document.addEventListener('mouseout', e=>{
+        if(e.target.closest('[data-tip]')) hide();
+    });
+    document.addEventListener('focusin', e=>{
+        const el = e.target.closest('[data-tip]');
+        if(!el) return;
+        const txt = el.getAttribute('data-tip') || el.getAttribute('title') || '';
+        if(!txt) return;
+        tip.textContent = txt;
+        tip.style.display = 'block';
+        const r = el.getBoundingClientRect();
+        position(r.right, r.top);
+    });
+    document.addEventListener('focusout', e=>{
+        if(e.target.closest('[data-tip]')) hide();
+    });
+
+    // سنک کردن متن تولتیپ با مقدار ورودی‌ها
+    document.addEventListener('input', e=>{
+        const el = e.target.closest('[data-tip]');
+        if(el){ el.setAttribute('data-tip', el.value); el.setAttribute('title', el.value); }
+    });
+    }
+
+    // ========= Event wiring =========
+    window.addEventListener('DOMContentLoaded', async ()=>{
+      setupTooltips();
+      populateSkills();
+      onSkillChange();
+      $('#skillSelect').addEventListener('change', onSkillChange);
+      $('#skillSearch').addEventListener('input', filterSkills);
+      $('#wJudgement').addEventListener('input', compute);
+      $('#wMeasurement').addEventListener('input', compute);
+      $('#addJudgement').addEventListener('click', ()=>addJRow({name:'',weight:0,score:0}));
+      $('#addMeasurement').addEventListener('click', ()=>addMRow({name:'',weight:0,score:0}));
+      $('#btnSave').addEventListener('click', ()=>saveLocal(false));
+      $('#btnLoad').addEventListener('click', loadLocal);
+      $('#btnExport').addEventListener('click', exportJSON);
+      $('#btnCSV').addEventListener('click', exportCSV);
+      $('#importFile').addEventListener('change', e=> e.target.files[0] && importJSON(e.target.files[0]));
+      $('#btnResetAll').addEventListener('click', resetAll);
+      $('#btnSkillTemplate').addEventListener('click', ()=>loadTemplate(currentSkill()));
+      $('#btnPrint').addEventListener('click', ()=>window.print());
+      $('#toggleLock').addEventListener('change', compute);
+      $('#toggleAuto').addEventListener('change', (e)=>{ autoSave = e.target.checked; if(autoSave) saveLocal(true); });
+      $('#btnLoadRubrics').addEventListener('click', async ()=>{ const ok = await tryLoadRubrics(); alert(ok?'rubrics.json بارگذاری شد.':'rubrics.json یافت نشد.'); });
+      // Shortcuts
+      document.addEventListener('keydown', (e)=>{ if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='s'){ e.preventDefault(); saveLocal(); } });
+      // Initial attempt to load external rubrics
+      await tryLoadRubrics();
+    });
+  </script>
+</body>
+</html>
